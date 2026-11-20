@@ -1,0 +1,7 @@
+.venv/
+.env
+__pycache__/
+*_report.xlsx
+*_report.docx
+.DS_Store
+.claude/
