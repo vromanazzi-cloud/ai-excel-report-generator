@@ -214,7 +214,8 @@ if report:
         st.warning("🔎 Number check: these values in the report do not match the computed data. "
                    "Check them before sending the report: " + ", ".join(f"`{n}`" for n in report["unverified"]))
     elif "unverified" in report and model:
-        st.success("🔎 Number check passed: every figure in the report matches the computed data.")
+        st.success("🔎 Number check: all the figures it checked appear in the computed data. "
+                   "Whole numbers up to 31 and dates are not checked, so read the report before sending it.")
     with st.container(border=True):
         st.markdown(report["summary"])
     d1, d2, d3 = st.columns(3)
