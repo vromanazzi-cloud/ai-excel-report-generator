@@ -8,7 +8,7 @@
 
 Many teams spend hours every month turning the same spreadsheets into the same report. This app does it in a couple of minutes: it cleans the data, computes the figures, spots what changed and writes the commentary.
 
-General-purpose chatbots are bad at this job, because they invent or miscalculate numbers. This app is built so that the AI **never calculates anything**: Python computes every figure, and the AI only explains them.
+General-purpose chatbots can invent or miscalculate numbers. This app is built so that the AI **does not have to calculate anything**: Python computes the figures, and the AI is instructed only to explain them.
 
 ## What it does
 
@@ -17,7 +17,7 @@ General-purpose chatbots are bad at this job, because they invent or miscalculat
 3. **Detects the structure** on its own: date column, main metric (revenue, sales, amount…), categories to break it down by, and status columns (completed / returned / cancelled).
 4. **Computes** the figures with pandas: monthly trend, rankings, segments that grew or dropped sharply, single rows far above normal, and status rates that spiked (for example returns).
 5. **Writes the report with a local LLM** through [Ollama](https://ollama.com) (default `qwen3:8b`): executive summary, key figures, risks, opportunities, recommended actions and data-quality notes, in 7 languages.
-6. **Checks the AI text**: every number in the report is compared with the computed data, and any value that does not match is flagged before you send the report.
+6. **Checks the AI text**: most numbers in the report are compared with the computed findings, and values that appear nowhere in them are flagged for review (see [Limits of the number check](#limits-of-the-number-check)).
 7. **Exports** the report to Excel (native charts + cleaned data), Word (formatted, with charts and tables) or Markdown.
 
 | Breakdown by segment | Automatic alerts |
@@ -28,19 +28,27 @@ General-purpose chatbots are bad at this job, because they invent or miscalculat
 
 *A real run with `qwen3:8b`: the model rounded "76.8%" to "over 76%", and the number check flagged it.*
 
-## How the anti-hallucination design works
+## How the app reduces made-up numbers
 
 ```
-Excel ──▶ pandas cleaning ──▶ pandas analytics ──▶ verified findings (plain sentences)
+Excel ──▶ pandas cleaning ──▶ pandas analytics ──▶ computed findings (plain sentences)
                                                          │
                                                          ▼
                                    local LLM: prioritise, explain, translate, recommend
                                                          │
                                                          ▼
-                                 number check: every figure must exist in the findings
+                                 number check: flags figures not found in the findings
 ```
 
-Small local models (7-8B) make mistakes when they read raw tables or do arithmetic. So the app turns every computed fact into a short, ready-made sentence, and the model only has to rephrase and prioritise. A final check parses every number in the AI output (both `1,234.5` and `1.234,5` formats) and flags anything that is not in the findings.
+Small local models (7-8B) make mistakes when they read raw tables or do arithmetic. So the app turns every computed fact into a short, ready-made sentence, and the model only has to rephrase and prioritise. A final check parses the numbers in the AI output (both `1,234.5` and `1.234,5` formats) and flags values that are not in the findings.
+
+### Limits of the number check
+
+The check is a safety net, not a guarantee, so read the report before sending it:
+
+- Whole numbers up to 31 (including percentages such as `25%`) and dates like `2026-10` are skipped.
+- It checks that a value exists in the findings, not that it is attached to the right item: a correct figure assigned to the wrong region is not flagged.
+- It does not check signs (growth or drop), numbers written in words, or the reasoning in the text.
 
 ## Setup
 
@@ -79,7 +87,7 @@ You can pick any installed model in the sidebar. To change the default model or 
 
 ## Privacy
 
-The model runs on your computer, so nothing is sent to external services and there is no cost per report. The model never sees the raw rows either: only the computed findings and the names of the other sheets.
+With the default settings the model runs on your computer, so the app sends your data to no external AI service and there is no cost per report. The model does not receive the full table: it gets the computed findings, the file and sheet names, and the details of single rows flagged as outliers.
 
 ## Tech stack
 
